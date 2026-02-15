@@ -1,34 +1,27 @@
 import { useState } from 'react'
 import './App.css'
-
+import FileUpload from './FileUpload'
+import Header from './Header'
+import TextInput from './TextInput'
+import AnalyzeButton from './AnalyzeButton'
+import Results from './Results'
 function App() {
   const [contractText, setContractText] = useState('')
   const [fileName, setFileName] = useState('')
   const [analysis, setAnalysis] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-
-    setFileName(file.name)
-    
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      setContractText(event.target.result)
-    }
-    reader.readAsText(file)
+  const handleFileUpload = ({ name, content }) => {
+    setFileName(name)
+    setContractText(content)
   }
 
   const handleAnalyze = async () => {
-    if (!contractText.trim()) {
-      alert('Please paste a contract or upload a file first')
-      return
-    }
+    if (!contractText.trim()) return
 
     setLoading(true)
     
-    // Mock analysis for now
+    // Mock analysis - will replace with real API later
     setTimeout(() => {
       setLoading(false)
       setAnalysis({
@@ -51,82 +44,32 @@ function App() {
 
   return (
     <div className="app">
-      <header className="header">
-        <h1>CONTRACT PROTECTION</h1>
-        <p className="subtitle">READS THE FINE PRINT SO YOU DON'T HAVE TO</p>
-      </header>
-
+      <Header />
+      
       <main>
         <div className="input-section">
-          <div className="upload-area">
-            <label className="file-label">
-              <input
-                type="file"
-                accept=".txt,.pdf,.doc,.docx"
-                onChange={handleFileUpload}
-                className="file-input"
-              />
-              <span className="file-button">CHOOSE FILE</span>
-            </label>
-            {fileName && (
-              <span className="file-name">{fileName}</span>
-            )}
-          </div>
+          <FileUpload 
+            onFileUpload={handleFileUpload} 
+            fileName={fileName} 
+          />
 
           <div className="or-divider">OR</div>
 
-          <textarea
-            className="contract-input"
-            rows="8"
-            placeholder="PASTE CONTRACT OR T&C HERE"
-            value={contractText}
-            onChange={(e) => setContractText(e.target.value)}
+          <TextInput 
+            value={contractText} 
+            onChange={setContractText} 
           />
           
-          <div className="button-group">
-            <button 
-              className="analyze-btn"
-              onClick={handleAnalyze}
-              disabled={loading}
-            >
-              {loading ? 'ANALYZING...' : 'ANALYZE'}
-            </button>
-            
-            {contractText && (
-              <button 
-                className="clear-btn"
-                onClick={clearAll}
-              >
-                CLEAR
-              </button>
-            )}
-          </div>
+          <AnalyzeButton 
+            onAnalyze={handleAnalyze}
+            onClear={clearAll}
+            loading={loading}
+            showClear={!!contractText}
+            contractText={contractText}
+          />
         </div>
 
-        {analysis && (
-          <div className="results-section">
-            <h2>RESULTS</h2>
-            
-            <div className="result-block">
-              <h3>SUMMARY</h3>
-              <p>{analysis.summary}</p>
-            </div>
-
-            <div className="result-block">
-              <h3>RED FLAGS</h3>
-              <ul>
-                {analysis.redFlags.map((flag, index) => (
-                  <li key={index}>→ {flag}</li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="result-block verdict">
-              <h3>VERDICT</h3>
-              <p>{analysis.verdict}</p>
-            </div>
-          </div>
-        )}
+        <Results analysis={analysis} />
       </main>
     </div>
   )
