@@ -17,24 +17,36 @@ function App() {
   }
 
   const handleAnalyze = async () => {
-    if (!contractText.trim()) return
+        if (!contractText.trim()) {
+          alert('Please paste a contract or upload a file first')
+          return
+        }
 
-    setLoading(true)
-    
-    // Mock analysis - will replace with real API later
-    setTimeout(() => {
-      setLoading(false)
-      setAnalysis({
-        summary: "12-month subscription agreement with automatic renewal.",
-        redFlags: [
-          "Auto-renews unless you cancel 60 days before",
-          "They can change pricing with 30 days notice",
-          "No refunds even if service is down"
-        ],
-        verdict: "⚠️ NEGOTIATE - Remove auto-renewal clause"
-      })
-    }, 2000)
-  }
+        setLoading(true)
+        
+        try {
+          const response = await fetch('https://contract-protection-ai-worker.ngwuemeka222.workers.dev', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ contract: contractText })
+          })
+
+          if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.error || 'Failed to analyze')
+          }
+
+          const data = await response.json()
+          setAnalysis(data)
+        } catch (error) {
+          console.error('Error:', error)
+          alert('Failed to analyze contract. Make sure the Worker is running at http://localhost:8787')
+        } finally {
+          setLoading(false)
+        }
+}
 
   const clearAll = () => {
     setContractText('')
